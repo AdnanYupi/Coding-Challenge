@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">CodingChallenge</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="users">Users</string>
+    <string name="enter_email">Enter email</string>
+    <string name="enter_name">Enter name</string>
+    <string name="enter_gender">Enter gender</string>
+    <string name="create">Create</string>
+    <string name="create_a_new_user">Create a new user</string>
+    <string name="please_select_one_user">Please select one user</string>
+    <string name="select_gender">Select gender</string>
+    <string name="select_status">Select status</string>
+</resources>
