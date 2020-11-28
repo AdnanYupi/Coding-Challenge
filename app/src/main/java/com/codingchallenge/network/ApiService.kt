@@ -1,12 +1,9 @@
 package com.codingchallenge.network
 
-import androidx.lifecycle.LiveData
-import com.codingchallenge.model.requests.user.UserRequest
-import com.codingchallenge.model.responses.user.UserResponse
-import com.codingchallenge.network.interceptor.AuthInterceptorImpl
+import com.codingchallenge.model.responses.comment.Comment
+import com.codingchallenge.model.responses.post.Post
+import com.codingchallenge.model.responses.user.User
 import com.codingchallenge.util.BASE_URL
-import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
-import kotlinx.coroutines.Deferred
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
@@ -17,14 +14,14 @@ import java.util.concurrent.TimeUnit
 
 interface ApiService {
 
-    @GET("public-api/users")
-    fun getUsersAsync(): Call<UserResponse>
+    @GET("users")
+    fun getUsersAsync(): Call<User>
 
-    @POST("public-api/users")
-    fun createNewUser(@Body userRequest: UserRequest): Call<UserResponse>
+    @GET("posts")
+    fun getPosts(): Call<Post>
 
-    @DELETE("public-api/users/{id}")
-    fun deleteUser(@Path("id") id: Int): Call<UserResponse>
+    @GET("comments")
+    fun getComments(@Query("postId") id: Int): Call<Comment>
 
 
     companion object {
@@ -33,7 +30,6 @@ interface ApiService {
             httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
 
             val okHttpClient = OkHttpClient.Builder()
-                .addInterceptor(AuthInterceptorImpl())
                 .addInterceptor(httpLoggingInterceptor)
                 .readTimeout(30000, TimeUnit.MILLISECONDS)
                 .writeTimeout(30000, TimeUnit.MILLISECONDS)

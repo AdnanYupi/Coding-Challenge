@@ -1,7 +1,7 @@
 package com.codingchallenge.database
 
 import androidx.room.TypeConverter
-import com.codingchallenge.model.responses.user.UserData
+import com.codingchallenge.model.responses.user.User
 import com.google.gson.Gson
 
 
@@ -10,13 +10,13 @@ import com.google.gson.Gson
 object UserDataConverter {
     @TypeConverter
     @JvmStatic
-    fun toListOfStrings(userData: MutableList<UserData>): String {
+    fun toListOfStrings(userData: User): String {
         return Gson().toJson(userData)
     }
 
     @TypeConverter
     @JvmStatic
-    fun fromListOfStrings(userData: String): List<UserData> {
-        return Gson().fromJson(userData, Array<UserData>::class.java).asList()
+    fun fromListOfStrings(userData: String): User {
+        return Gson().fromJson(userData, User::class.java)
     }
 }
