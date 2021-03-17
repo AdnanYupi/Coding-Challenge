@@ -1,8 +1,8 @@
 package com.codingchallenge.network
 
-import com.codingchallenge.model.responses.comment.Comment
-import com.codingchallenge.model.responses.post.Post
+import com.codingchallenge.model.responses.repositories.Repositories
 import com.codingchallenge.model.responses.user.User
+import com.codingchallenge.model.responses.user.UserItem
 import com.codingchallenge.util.BASE_URL
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -15,13 +15,13 @@ import java.util.concurrent.TimeUnit
 interface ApiService {
 
     @GET("users")
-    fun getUsersAsync(): Call<User>
+    fun getUsersAsync(@Query("since") since: Int): Call<User>
 
-    @GET("posts")
-    fun getPosts(): Call<Post>
+    @GET("repositories")
+    fun getRepositories(): Call<Repositories>
 
-    @GET("comments")
-    fun getComments(@Query("postId") id: Int): Call<Comment>
+    @GET("users/{user}")
+    fun getUser(@Path("user") user: String): Call<UserItem>
 
 
     companion object {

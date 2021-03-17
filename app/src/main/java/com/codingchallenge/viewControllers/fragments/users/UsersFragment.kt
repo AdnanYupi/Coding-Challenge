@@ -1,44 +1,40 @@
 package com.codingchallenge.viewControllers.fragments.users
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.util.Log
 import android.view.View
-import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.codingchallenge.R
 import com.codingchallenge.adapter.GenericAdapter
 import com.codingchallenge.model.responses.user.User
 import com.codingchallenge.model.responses.user.UserItem
+import com.codingchallenge.util.PaginationScrollListener
 import com.codingchallenge.util.networkAvailable
 import com.codingchallenge.viewControllers.BaseFragment
+import com.codingchallenge.viewControllers.activities.UserDetailActivity
 import kotlinx.android.synthetic.main.fragment_users.*
 import kotlinx.android.synthetic.main.user_cell.view.*
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.closestKodein
 import org.kodein.di.generic.instance
 
-class UsersFragment : BaseFragment(), KodeinAware {
+class UsersFragment : BaseFragment(R.layout.fragment_users), KodeinAware {
 
     private var dialog: AlertDialog? = null
     private var adapter: GenericAdapter<UserItem>? = null
     private var usersList: User = User()
-
+    private var pageIndex = 0
+    private var isLoadingPage: Boolean = false
     private lateinit var usersViewModel: UsersViewModel
-    private val usersViewModelFactory: UsersViewModelFactory by instance<UsersViewModelFactory>()
+    private val usersViewModelFactory: UsersViewModelFactory by instance()
 
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_users, container, false)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -55,37 +51,38 @@ class UsersFragment : BaseFragment(), KodeinAware {
     private fun initViewModel() {
         usersViewModel = ViewModelProvider(this, usersViewModelFactory)
             .get(UsersViewModel::class.java)
-        setProgressBarVisibility(View.VISIBLE)
-        fetchUsers(networkAvailable(requireContext()))
+        fetchUsers(networkAvailable(requireContext()), page = 0)
     }
 
 
-    private fun fetchUsers(isOnline: Boolean) {
-        val users = usersViewModel.getUsers(isOnline)
+    private fun fetchUsers(isOnline: Boolean, page: Int) {
+        setProgressBarVisibility(View.VISIBLE)
+        isLoadingPage = true
+        val users = usersViewModel.getUsers(isOnline, page)
         users.observe(viewLifecycleOwner, Observer {
             setProgressBarVisibility(View.GONE)
             if (it == null)
                 return@Observer
+            isLoadingPage = false
 
-            val userData = it
-            if (isAdded && context != null) //This shouldn't be required because of lifecycleOwner but just in case
-            {
-                if (usersList.isNotEmpty())
-                    usersList.clear()
+            /*  if (usersList.isNotEmpty())
+                  usersList.clear()*/
 
-                usersList.addAll(userData)
-                initAdapter()
-                //Move DB sync to background
-                AsyncTask.execute {
-                    usersViewModel.persistUsersOnDB(usersList)
-                }
+            usersList.addAll(it)
+            initAdapter()
+            //Move DB sync to background
+            AsyncTask.execute {
+                usersViewModel.persistUsersOnDB(usersList)
             }
+
         })
     }
 
+
     private fun initAdapter() {
         if (adapter == null) {
-            usersRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+            val manager = LinearLayoutManager(requireContext())
+            usersRecyclerView.layoutManager = manager
             usersRecyclerView.setHasFixedSize(true)
             usersRecyclerView.addItemDecoration(
                 DividerItemDecoration(
@@ -95,20 +92,48 @@ class UsersFragment : BaseFragment(), KodeinAware {
             )
             adapter = generateAdapter()
             usersRecyclerView.adapter = adapter
+            attachScrollListener(manager)
+            adapter?.onPostClick = {
+                val intent = Intent(requireContext(), UserDetailActivity::class.java)
+                intent.putExtra("username", it.userLogin)
+                startActivity(intent)
+            }
         } else {
-            adapter!!.notifyDataSetChanged()
+            adapter?.notifyDataSetChanged()
         }
     }
 
-    private fun generateAdapter(): GenericAdapter<UserItem> {
-        return object: GenericAdapter<UserItem>(usersList) {
-            override fun create(item: UserItem, viewHolder: ViewHolder) {
-                if (item.name != null)
-                    viewHolder.itemView.username.text = item.name
-                if (item.email != null)
-                    viewHolder.itemView.userEmail.text = item.email
+    private fun attachScrollListener(manager: LinearLayoutManager) {
+        val scrollListener = object : PaginationScrollListener(manager) {
+            override val isLastPage: Boolean?
+                get() = false
 
-                viewHolder.itemView.createdDate.text = "User id: ${item.id}"
+            override val isLoading: Boolean?
+                get() = isLoadingPage
+
+            override fun loadMoreItems() {
+                pageIndex++
+                Log.d("PageIndex", "$pageIndex")
+                fetchUsers(networkAvailable(requireContext()), pageIndex)
+            }
+        }
+        usersRecyclerView.addOnScrollListener(scrollListener)
+    }
+
+    private fun generateAdapter(): GenericAdapter<UserItem> {
+        return object : GenericAdapter<UserItem>(usersList) {
+            override fun create(item: UserItem, viewHolder: ViewHolder) {
+                if (item.userLogin != null)
+                    viewHolder.itemView.username.text = item.userLogin
+                if (item.type != null)
+                    viewHolder.itemView.userEmail.text = item.type
+
+                if (item.avatarUrl != null)
+                    Glide.with(requireContext())
+                        .load(item.avatarUrl)
+                        .into(viewHolder.itemView.profileImage)
+
+                viewHolder.itemView.createdDate.text = "User id: ${item.userId}"
             }
 
             override fun getItemViewType(position: Int): Int {

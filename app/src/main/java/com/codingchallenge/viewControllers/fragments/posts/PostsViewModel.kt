@@ -2,16 +2,16 @@ package com.codingchallenge.viewControllers.fragments.posts
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import com.codingchallenge.model.responses.post.PostItem
-import com.codingchallenge.repository.posts.PostsRepository
+import com.codingchallenge.model.responses.repositories.RepositoriesItem
+import com.codingchallenge.repository.repositories.RepositoryPosts
 
-class PostsViewModel(private val postsRepository: PostsRepository): ViewModel() {
+class PostsViewModel(private val postsRepository: RepositoryPosts): ViewModel() {
 
-    fun getPosts(isOnline: Boolean): LiveData<List<PostItem>> {
-        return postsRepository.getPosts(isOnline)
+    fun getPosts(isOnline: Boolean): LiveData<List<RepositoriesItem>> {
+        return postsRepository.getRepositories(isOnline)
     }
 
-    fun pushPostsToDB(postItems: List<PostItem>) {
+   /* fun pushPostsToDB(postItems: List<PostItem>) {
         postsRepository.insertPosts(postItems)
-    }
+    }*/
 }

@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.codingchallenge.R
@@ -15,7 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
- open class BaseFragment : Fragment(), CoroutineScope {
+ abstract class BaseFragment(@LayoutRes private val layoutId: Int) : Fragment(), CoroutineScope {
 
      //Kotlin Coroutines job set for easier switching on Kotlin Coroutines
     private lateinit var job: Job
@@ -27,6 +28,14 @@ import kotlin.coroutines.CoroutineContext
         super.onCreate(savedInstanceState)
         job = Job()
     }
+
+     override fun onCreateView(
+         inflater: LayoutInflater,
+         container: ViewGroup?,
+         savedInstanceState: Bundle?
+     ): View? {
+         return inflater.inflate(layoutId, container, false)
+     }
 
      override fun onDestroy() {
          super.onDestroy()

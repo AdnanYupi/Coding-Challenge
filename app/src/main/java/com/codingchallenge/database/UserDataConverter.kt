@@ -1,6 +1,7 @@
 package com.codingchallenge.database
 
 import androidx.room.TypeConverter
+import com.codingchallenge.model.responses.repositories.RepositoriesItem
 import com.codingchallenge.model.responses.user.User
 import com.google.gson.Gson
 
@@ -18,5 +19,17 @@ object UserDataConverter {
     @JvmStatic
     fun fromListOfStrings(userData: String): User {
         return Gson().fromJson(userData, User::class.java)
+    }
+
+    @TypeConverter
+    @JvmStatic
+    fun postsListOfStrings(userData: RepositoriesItem): String {
+        return Gson().toJson(userData)
+    }
+
+    @TypeConverter
+    @JvmStatic
+    fun fromPostsListOfStrings(userData: String): RepositoriesItem {
+        return Gson().fromJson(userData, RepositoriesItem::class.java)
     }
 }

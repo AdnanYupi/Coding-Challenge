@@ -14,9 +14,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".viewControllers.activities.comments.CommentsActivity"
+        <activity android:name=".viewControllers.activities.UserDetailActivity"
             android:parentActivityName=".viewControllers.activities.MainActivity"
-            android:label="Comments"/>
+            android:label="Details"/>
         <activity android:name=".viewControllers.activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

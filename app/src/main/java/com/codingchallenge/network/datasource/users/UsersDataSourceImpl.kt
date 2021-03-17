@@ -15,9 +15,10 @@ class UsersDataSourceImpl(private val apiService: ApiService) : UsersDataSource 
     override val userResponse: LiveData<List<UserItem>>
         get() = userResponseMutableData
 
-    override fun getUsers(): LiveData<List<UserItem>> {
+
+    override fun getUsers(page: Int): LiveData<List<UserItem>> {
         try {
-            apiService.getUsersAsync()
+            apiService.getUsersAsync(page)
                 .enqueue(object : Callback<User> {
                     override fun onResponse(
                         call: Call<User>,
@@ -37,6 +38,17 @@ class UsersDataSourceImpl(private val apiService: ApiService) : UsersDataSource 
         }
 
         return userResponseMutableData;
+    }
+
+    override fun getUser(username: String, userResponse: (Response<UserItem>) -> Unit) {
+        apiService.getUser(username).enqueue(object: Callback<UserItem>{
+                override fun onResponse(call: Call<UserItem>, response: Response<UserItem>) {
+                    userResponse.invoke(response)
+                }
+                override fun onFailure(call: Call<UserItem>, t: Throwable) {
+                }
+
+            })
     }
 
 }
