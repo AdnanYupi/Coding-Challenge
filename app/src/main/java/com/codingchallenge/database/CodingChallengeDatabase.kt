@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import com.codingchallenge.model.responses.repositories.RepositoriesItem
 import com.codingchallenge.model.responses.user.UserItem
 
-@Database(entities = [UserItem::class, RepositoriesItem::class], version = 1)
+@Database(entities = [UserItem::class, RepositoriesItem::class], version = 1, exportSchema = false)
 @TypeConverters(UserDataConverter::class)
 abstract class CodingChallengeDatabase : RoomDatabase() {
 

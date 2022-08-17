@@ -1,79 +1,68 @@
-package com.codingchallenge.viewControllers.fragments.users
+package com.codingchallenge.presentation.fragments.users
 
 import android.app.AlertDialog
 import android.content.Intent
-import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.codingchallenge.R
 import com.codingchallenge.adapter.GenericAdapter
-import com.codingchallenge.model.responses.user.User
+import com.codingchallenge.databinding.FragmentUsersBinding
 import com.codingchallenge.model.responses.user.UserItem
+import com.codingchallenge.network.ApiResult
 import com.codingchallenge.util.PaginationScrollListener
 import com.codingchallenge.util.networkAvailable
-import com.codingchallenge.viewControllers.BaseFragment
-import com.codingchallenge.viewControllers.activities.UserDetailActivity
+import com.codingchallenge.presentation.BaseFragment
+import com.codingchallenge.presentation.activities.UserDetailActivity
+import com.codingchallenge.viewmodels.UsersViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_users.*
 import kotlinx.android.synthetic.main.user_cell.view.*
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.closestKodein
-import org.kodein.di.generic.instance
 
-class UsersFragment : BaseFragment(R.layout.fragment_users), KodeinAware {
+@AndroidEntryPoint
+class UsersFragment : BaseFragment<FragmentUsersBinding, UsersViewModel>(R.layout.fragment_users) {
 
     private var dialog: AlertDialog? = null
     private var adapter: GenericAdapter<UserItem>? = null
-    private var usersList: User = User()
     private var pageIndex = 0
     private var isLoadingPage: Boolean = false
-    private lateinit var usersViewModel: UsersViewModel
-    private val usersViewModelFactory: UsersViewModelFactory by instance()
 
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override val viewModel: UsersViewModel by activityViewModels()
 
+    override fun inflated(binding: FragmentUsersBinding) {
         initAdapter()
+        if (viewModel.usersList.isEmpty())
+            fetchUsers(networkAvailable(requireContext()), page = 0)
 
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        initViewModel()
-    }
-
-    private fun initViewModel() {
-        usersViewModel = ViewModelProvider(this, usersViewModelFactory)
-            .get(UsersViewModel::class.java)
-        fetchUsers(networkAvailable(requireContext()), page = 0)
     }
 
 
     private fun fetchUsers(isOnline: Boolean, page: Int) {
-        setProgressBarVisibility(View.VISIBLE)
         isLoadingPage = true
-        val users = usersViewModel.getUsers(isOnline, page)
+        val users = viewModel.getUsers(isOnline, page)
         users.observe(viewLifecycleOwner, Observer {
-            setProgressBarVisibility(View.GONE)
             if (it == null)
                 return@Observer
             isLoadingPage = false
-
+            if (it is ApiResult.Success) {
+                it.data?.let { users ->
+                    viewModel.usersList.addAll(users)
+                    if (adapter != null)
+                        adapter?.notifyDataSetChanged()
+                }
+            } else if (it is ApiResult.Error) {
+                //TODO handle error
+            }
             /*  if (usersList.isNotEmpty())
                   usersList.clear()*/
-
-            usersList.addAll(it)
-            initAdapter()
-            //Move DB sync to background
-            AsyncTask.execute {
-                usersViewModel.persistUsersOnDB(usersList)
-            }
 
         })
     }
@@ -98,8 +87,6 @@ class UsersFragment : BaseFragment(R.layout.fragment_users), KodeinAware {
                 intent.putExtra("username", it.userLogin)
                 startActivity(intent)
             }
-        } else {
-            adapter?.notifyDataSetChanged()
         }
     }
 
@@ -121,7 +108,7 @@ class UsersFragment : BaseFragment(R.layout.fragment_users), KodeinAware {
     }
 
     private fun generateAdapter(): GenericAdapter<UserItem> {
-        return object : GenericAdapter<UserItem>(usersList) {
+        return object : GenericAdapter<UserItem>(viewModel.usersList) {
             override fun create(item: UserItem, viewHolder: ViewHolder) {
                 if (item.userLogin != null)
                     viewHolder.itemView.username.text = item.userLogin
@@ -155,7 +142,5 @@ class UsersFragment : BaseFragment(R.layout.fragment_users), KodeinAware {
             dialog!!.dismiss()
         super.onDestroy()
     }
-
-    override val kodein by closestKodein()
 
 }

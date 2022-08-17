@@ -1,3 +1,8 @@
 package com.codingchallenge.model.responses.repositories
 
-class Repositories : ArrayList<RepositoriesItem>()
+import com.google.gson.annotations.SerializedName
+
+data class Repositories(
+    @SerializedName("repositories")
+    val repositories: List<RepositoriesItem>?
+)

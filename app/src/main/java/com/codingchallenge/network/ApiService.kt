@@ -1,12 +1,14 @@
 package com.codingchallenge.network
 
 import com.codingchallenge.model.responses.repositories.Repositories
+import com.codingchallenge.model.responses.repositories.RepositoriesItem
 import com.codingchallenge.model.responses.user.User
 import com.codingchallenge.model.responses.user.UserItem
 import com.codingchallenge.util.BASE_URL
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
@@ -15,13 +17,13 @@ import java.util.concurrent.TimeUnit
 interface ApiService {
 
     @GET("users")
-    fun getUsersAsync(@Query("since") since: Int): Call<User>
+    suspend fun getUsersAsync(@Query("since") since: Int): Response<List<UserItem>>?
 
     @GET("repositories")
-    fun getRepositories(): Call<Repositories>
+    suspend fun getRepositories(): Response<List<RepositoriesItem>>?
 
     @GET("users/{user}")
-    fun getUser(@Path("user") user: String): Call<UserItem>
+    suspend fun getUser(@Path("user") user: String): Response<UserItem>?
 
 
     companion object {

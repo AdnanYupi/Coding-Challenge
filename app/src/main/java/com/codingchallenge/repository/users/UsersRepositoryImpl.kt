@@ -2,16 +2,18 @@ package com.codingchallenge.repository.users
 
 import androidx.lifecycle.LiveData
 import com.codingchallenge.database.CodingChallengeDao
+import com.codingchallenge.extensions.resultFlow
+import com.codingchallenge.model.responses.user.User
 import com.codingchallenge.model.responses.user.UserItem
-import com.codingchallenge.network.datasource.users.UsersDataSourceImpl
+import com.codingchallenge.network.ApiResult
+import com.codingchallenge.network.ApiService
+import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 
-class UsersRepositoryImpl(
-    private val codingChallengeDao: CodingChallengeDao,
-    private val usersDataSourceImpl: UsersDataSourceImpl
+class UsersRepositoryImpl(private val apiService: ApiService
 ) : UsersRepository {
 
-    init {
+    /*init {
         //Observe for changes on users
         usersDataSourceImpl.apply {
             usersDataSourceImpl.userResponse.observeForever {
@@ -19,25 +21,29 @@ class UsersRepositoryImpl(
                     return@observeForever
             }
         }
-    }
+    }*/
 
     //Check is network available
     //If available get users from API
     //else from DB
-    override fun getUsers(isOnline: Boolean, page: Int): LiveData<List<UserItem>> {
-        if (!isOnline)
-            return codingChallengeDao.getUsers()!!
-        return usersDataSourceImpl.getUsers(page)
+    override fun getUsers(isOnline: Boolean, page: Int): Flow<ApiResult<List<UserItem>>?> {
+        //if (!isOnline)
+            //return codingChallengeDao.getUsers()
+        return resultFlow {
+            apiService.getUsersAsync(page)
+        }
     }
 
-    override fun getUser(username: String, onResponse: ((Response<UserItem>) -> Unit)) {
-        usersDataSourceImpl.getUser(username, onResponse)
+    override fun getUser(username: String): Flow<ApiResult<UserItem>?> {
+        return resultFlow {
+            apiService.getUser(username)
+        }
     }
 
 
     //Push users to DB - replace old
     override fun persistUsersOnDB(users: List<UserItem>) {
-        codingChallengeDao.insertUsers(users)
+       //TODO codingChallengeDao.insertUsers(users)
     }
 
 }

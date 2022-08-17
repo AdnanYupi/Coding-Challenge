@@ -1,39 +1,45 @@
-package com.codingchallenge.viewControllers.fragments.posts
+package com.codingchallenge.presentation.fragments.posts
 
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.codingchallenge.R
 import com.codingchallenge.adapter.GenericAdapter
+import com.codingchallenge.databinding.FragmentPostsBinding
 import com.codingchallenge.model.responses.repositories.RepositoriesItem
+import com.codingchallenge.network.ApiResult
 import com.codingchallenge.util.networkAvailable
-import com.codingchallenge.viewControllers.BaseFragment
+import com.codingchallenge.presentation.BaseFragment
+import com.codingchallenge.viewmodels.PostsViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_posts.*
 import kotlinx.android.synthetic.main.user_cell.view.*
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.closestKodein
-import org.kodein.di.generic.instance
 
-class PostsFragment : BaseFragment(R.layout.fragment_posts), KodeinAware {
+@AndroidEntryPoint
+class PostsFragment : BaseFragment<FragmentPostsBinding, PostsViewModel>(R.layout.fragment_posts) {
 
-    private lateinit var postsViewModel: PostsViewModel
-    private val postsViewModelFactory: PostsViewModelFactory by instance<PostsViewModelFactory>()
-    private var postItems = arrayListOf<RepositoriesItem>()
+    private val postsViewModel: PostsViewModel by activityViewModels()
     private var adapter: GenericAdapter<RepositoriesItem>? = null
 
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        postsViewModel = ViewModelProvider(this, postsViewModelFactory)
-            .get(PostsViewModel::class.java)
-        observeForPosts(networkAvailable(requireContext()))
+    override val viewModel: PostsViewModel by activityViewModels()
+
+    override fun inflated(binding: FragmentPostsBinding) {
+        if (viewModel.postItems.isEmpty())
+            observeForPosts(networkAvailable(requireContext()))
+
+        initAdapter()
+
     }
+
 
     private fun observeForPosts(isOnline: Boolean) {
         postsViewModel.getPosts(isOnline)
@@ -41,20 +47,27 @@ class PostsFragment : BaseFragment(R.layout.fragment_posts), KodeinAware {
                 if (it == null)
                     return@Observer
 
-                if (postItems.isNotEmpty())
-                    postItems.clear()
-
-                postItems.addAll(it)
-                initRecyclerView()
+                if (it is ApiResult.Success) {
+                    viewModel.postItems.addAll(it.data!!)
+                    if (adapter != null)
+                        adapter?.notifyDataSetChanged()
+                } else if (it is ApiResult.Error) {
+                    //TODO handle error
+                }
 
             })
     }
 
-    private fun initRecyclerView() {
+    private fun initAdapter() {
         if (adapter == null) {
             postsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
             postsRecyclerView.setHasFixedSize(true)
-            postsRecyclerView.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+            postsRecyclerView.addItemDecoration(
+                DividerItemDecoration(
+                    requireContext(),
+                    DividerItemDecoration.VERTICAL
+                )
+            )
             adapter = generateAdapter()
             postsRecyclerView.adapter = adapter
 
@@ -65,13 +78,11 @@ class PostsFragment : BaseFragment(R.layout.fragment_posts), KodeinAware {
                 }
             }
 
-        } else {
-            adapter!!.notifyDataSetChanged()
         }
     }
 
     private fun generateAdapter(): GenericAdapter<RepositoriesItem> {
-        return object: GenericAdapter<RepositoriesItem>(postItems) {
+        return object : GenericAdapter<RepositoriesItem>(viewModel.postItems) {
             override fun create(item: RepositoriesItem, viewHolder: ViewHolder) {
 
                 viewHolder.itemView.profileImage.visibility = View.GONE
@@ -90,8 +101,5 @@ class PostsFragment : BaseFragment(R.layout.fragment_posts), KodeinAware {
 
         }
     }
-
-
-    override val kodein: Kodein by closestKodein()
 
 }

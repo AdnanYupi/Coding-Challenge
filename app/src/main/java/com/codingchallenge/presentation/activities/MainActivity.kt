@@ -1,24 +1,23 @@
-package com.codingchallenge.viewControllers.activities
+package com.codingchallenge.presentation.activities
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import com.codingchallenge.R
-import com.codingchallenge.viewControllers.fragments.posts.PostsFragment
-import com.codingchallenge.viewControllers.fragments.users.UsersFragment
+import com.codingchallenge.presentation.fragments.posts.PostsFragment
+import com.codingchallenge.presentation.fragments.users.UsersFragment
 import com.google.android.material.tabs.TabLayout
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
-import org.kodein.di.KodeinAware
-import org.kodein.di.android.closestKodein
 
 /**
  * Project written:
- * - using Kotlin
+ * - using Kotlin (Coroutines and Flow)
  * - following MVVM architecture
  * - Retrofit
  * - LiveData
  * - Room
- * - Kodein dependency injection
+ * - Hilt dependency injection
  * - with short methods contains one layer of logic
  *
  * Created Repository - which makes project easily convertible to Kotlin Coroutines
@@ -27,7 +26,8 @@ import org.kodein.di.android.closestKodein
  * I didn't pay attention on having some fancy app. I was thinking that most important thing is code structure
  */
 
-class MainActivity : AppCompatActivity(), KodeinAware {
+@AndroidEntryPoint
+class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,5 +71,4 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             .commit()
     }
 
-    override val kodein by closestKodein()
 }

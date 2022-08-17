@@ -4,4 +4,6 @@ import androidx.room.Dao
 import androidx.room.Entity
 
 
-class User : ArrayList<UserItem>()
+data class User(
+    val userItem: List<UserItem>?
+)
